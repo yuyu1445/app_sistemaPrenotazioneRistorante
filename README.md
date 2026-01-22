@@ -14,24 +14,34 @@ Applicazione web full-stack per la gestione delle prenotazioni di un ristorante,
 
 ```
 test_finale/
+├── .gitignore                 # Regole Git (venv, ecc.)
 ├── backend/
 │   ├── app/
+│   │   ├── __init__.py            # Pacchetto app
 │   │   ├── main.py              # Endpoint API FastAPI
+│   │   ├── auth.py              # Autenticazione e login
 │   │   ├── models.py            # Modelli ORM SQLAlchemy
 │   │   ├── schemas.py           # Schemi Pydantic
 │   │   ├── database.py          # Configurazione database
 │   │   ├── seed.py              # Popolamento dati iniziali
 │   │   └── services/
+│   │       ├── __init__.py
 │   │       └── booking_service.py
 │   └── ristorante.db            # Database SQLite (generato)
 ├── frontend/
 │   ├── index.html               # Pagina principale Vue 3
 │   ├── app.js                   # Logica applicazione Vue
 │   ├── styles.css               # Stili CSS
-│   └── package.json             # Configurazione npm
+│   ├── package.json             # Configurazione npm
+│   └── package-lock.json        # Lockfile npm
+├── venv/                        # Ambiente virtuale (ignorato)
 ├── requirements.txt             # Dipendenze Python
 ├── genera_grafici_prenotazioni.py  # Script generazione grafici
 ├── crea_powerpoint.py           # Script creazione PowerPoint
+├── grafico_occupazione_oraria.png  # Output grafico (generato)
+├── grafico_giorni_settimana.png    # Output grafico (generato)
+├── grafico_tendenze_3_mesi.png     # Output grafico (generato)
+├── Report_Prenotazioni.pptx        # Output report (generato)
 └── README.md
 ```
 
