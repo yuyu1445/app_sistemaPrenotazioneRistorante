@@ -1,0 +1,15 @@
+# Backend API
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+email-validator
+
+# Autenticazione JWT
+python-jose[cryptography]
+bcrypt
+
+# Generazione grafici e report
+matplotlib
+numpy
+python-pptx

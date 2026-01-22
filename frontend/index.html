@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prenotazioni Ristorante</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient">
+      <div class="orb orb--one"></div>
+      <div class="orb orb--two"></div>
+      <div class="grain"></div>
+    </div>
+
+    <div id="app" class="app">
+      <!-- HOME SCREEN -->
+      <section v-if="currentScreen === 'home'" class="home">
+        <header class="home-hero">
+          <div class="home-copy">
+            <p class="eyebrow">Osteria digitale</p>
+            <h1>Il tuo tavolo pronto, la tua serata gia iniziata.</h1>
+            <p class="subtitle">
+              Prenota online e ricevi conferma rapida. Entra nella Lista Ospiti: menu
+              stagionali, eventi privati, inviti in anteprima e offerte dedicate. Un
+              tocco di digital marketing che fa sentire speciali i nostri ospiti.
+            </p>
+            <div class="home-actions">
+              <button class="primary" @click="showAuthScreen('cliente')">Prenota come cliente</button>
+              <button class="ghost" @click="showAuthScreen('staff')">Area staff</button>
+            </div>
+            <div class="home-pills">
+              <span class="pill">Conferma rapida</span>
+              <span class="pill">Eventi esclusivi</span>
+              <span class="pill">Menu stagionale</span>
+            </div>
+          </div>
+          <div class="home-media" role="img" aria-label="Sala ristorante accogliente">
+            <div class="home-media__badge">
+              <span class="badge-title">Atmosfera autentica</span>
+              <span class="badge-subtitle">Accoglienza e cucina italiana</span>
+            </div>
+          </div>
+        </header>
+        <section class="home-highlights">
+          <article class="home-card">
+            <h3>Prenotazione in 30 secondi</h3>
+            <p>Scegli data, orario e tavolo: la conferma arriva subito e senza attese.</p>
+          </article>
+          <article class="home-card">
+            <h3>Esperienza su misura</h3>
+            <p>Preferenze e richieste consegnate allo staff prima del tuo arrivo.</p>
+          </article>
+          <article class="home-card">
+            <h3>Marketing relazionale</h3>
+            <p>Inviti esclusivi, promozioni mirate e dialogo diretto con la community.</p>
+          </article>
+        </section>
+      </section>
+
+      <!-- AUTH SCREEN -->
+      <section v-if="currentScreen === 'auth'" class="auth-screen">
+        <div class="auth-container">
+          <button class="auth-back" @click="goHome">&larr; Torna indietro</button>
+
+          <!-- LOGIN STAFF -->
+          <div v-if="authMode === 'staff'" class="auth-box">
+            <h2>Accesso Staff</h2>
+            <p>Inserisci le credenziali fornite dal ristorante.</p>
+            <form @submit.prevent="loginStaff" class="auth-form" autocomplete="off">
+              <label>
+                Username
+                <input
+                  type="text"
+                  v-model="loginUsername"
+                  name="staff-username"
+                  placeholder="es. admin"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  required
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  v-model="loginPassword"
+                  name="staff-password"
+                  placeholder="Password"
+                  autocomplete="new-password"
+                  required
+                />
+              </label>
+              <div class="auth-message" v-if="authMessage">{{ authMessage }}</div>
+              <button type="submit" class="primary" :disabled="authLoading">
+                {{ authLoading ? 'Accesso...' : 'Accedi' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- LOGIN/REGISTER CLIENTE -->
+          <div v-if="authMode === 'cliente'" class="auth-box">
+            <div class="auth-tabs">
+              <button :class="{ active: authTab === 'login' }" @click="setAuthTab('login')">Accedi</button>
+              <button :class="{ active: authTab === 'register' }" @click="setAuthTab('register')">Registrati</button>
+            </div>
+
+            <!-- Login Cliente -->
+            <form v-if="authTab === 'login'" @submit.prevent="loginCustomer" class="auth-form" autocomplete="off">
+              <label>
+                Username
+                <input
+                  type="text"
+                  v-model="loginUsername"
+                  name="customer-login-username"
+                  placeholder="Il tuo username"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  required
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  v-model="loginPassword"
+                  name="customer-login-password"
+                  placeholder="Password"
+                  autocomplete="new-password"
+                  required
+                />
+              </label>
+              <div class="auth-message" v-if="authMessage">{{ authMessage }}</div>
+              <button type="submit" class="primary" :disabled="authLoading">
+                {{ authLoading ? 'Accesso...' : 'Accedi' }}
+              </button>
+            </form>
+
+            <!-- Registrazione Cliente -->
+            <form v-if="authTab === 'register'" @submit.prevent="registerCustomer" class="auth-form" autocomplete="off">
+              <label>
+                Nome e cognome
+                <input
+                  type="text"
+                  v-model="registerName"
+                  name="customer-register-name"
+                  placeholder="Es. Marco Rossi"
+                  autocomplete="off"
+                  required
+                />
+              </label>
+              <label>
+                Telefono
+                <input
+                  type="tel"
+                  v-model="registerPhone"
+                  name="customer-register-phone"
+                  placeholder="+39..."
+                  autocomplete="off"
+                  required
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  type="email"
+                  v-model="registerEmail"
+                  name="customer-register-email"
+                  placeholder="nome@email.it"
+                  autocomplete="off"
+                  required
+                />
+              </label>
+              <label>
+                Username
+                <input
+                  type="text"
+                  v-model="registerUsername"
+                  name="customer-register-username"
+                  placeholder="Scegli un username"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  required
+                  minlength="3"
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  v-model="registerPassword"
+                  name="customer-register-password"
+                  placeholder="Minimo 6 caratteri"
+                  autocomplete="new-password"
+                  required
+                  minlength="6"
+                />
+              </label>
+              <div class="auth-message" v-if="authMessage">{{ authMessage }}</div>
+              <button type="submit" class="primary" :disabled="authLoading">
+                {{ authLoading ? 'Registrazione...' : 'Registrati' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- APP SHELL (LOGGED IN) -->
+      <section v-if="currentScreen === 'app'" class="app-shell">
+        <div class="app-topbar">
+          <span class="view-label">
+            <template v-if="currentUser">
+              <span v-if="currentUser.user_type === 'staff'">Ciao amministratore</span>
+              <span v-else>Ciao, {{ currentUser.full_name }}</span>
+              <span class="user-type-badge">{{ currentUser.user_type === 'staff' ? 'Staff' : 'Cliente' }}</span>
+            </template>
+          </span>
+          <div class="topbar-actions">
+            <button v-if="activeView === 'cliente'" class="ghost" :class="{ active: showMyBookings }" @click="toggleMyBookings">
+              Le mie prenotazioni
+            </button>
+            <button class="ghost" @click="logout">Logout</button>
+          </div>
+        </div>
+
+        <header class="hero">
+          <div>
+            <p class="eyebrow">Prenotazioni ristorante</p>
+            <h1>{{ activeView === 'cliente' ? 'Prenota il tuo tavolo' : 'Gestione prenotazioni' }}</h1>
+            <p class="subtitle">
+              {{ activeView === 'cliente' ? 'Disponibilita in tempo reale. Prenota in pochi click.' : 'Vista gestionale con tutte le prenotazioni.' }}
+            </p>
+          </div>
+        </header>
+
+        <!-- VISTA CLIENTE -->
+        <section v-if="activeView === 'cliente'" class="client-view">
+
+          <!-- LE MIE PRENOTAZIONI -->
+          <div v-if="showMyBookings" class="panel my-bookings-panel">
+            <div class="panel__header">
+              <div>
+                <h2>Le mie prenotazioni</h2>
+                <p>Puoi cancellare una prenotazione entro 30 minuti dalla creazione.</p>
+              </div>
+              <button class="ghost" @click="showMyBookings = false">Chiudi</button>
+            </div>
+            <div v-if="myBookings.length === 0" class="empty">
+              Non hai ancora prenotazioni.
+            </div>
+            <div v-else class="my-bookings-list">
+              <div v-for="booking in myBookings" :key="booking.id" class="my-booking-card" :class="booking.status">
+                <div class="my-booking-info">
+                  <div class="my-booking-date">{{ formatDate(booking.reservation_date) }}</div>
+                  <div class="my-booking-time">{{ booking.time_start }} - {{ booking.time_end }}</div>
+                  <div class="my-booking-details">
+                    Tavolo {{ booking.table_number }} - {{ booking.guest_count }} ospiti
+                  </div>
+                  <span class="badge" :class="statusBadge(booking.status)">{{ booking.status }}</span>
+                </div>
+                <div class="my-booking-actions">
+                  <button
+                    v-if="booking.can_cancel"
+                    class="chip cancel"
+                    @click="cancelMyBooking(booking.id)"
+                    :disabled="cancellingBookingId === booking.id"
+                  >
+                    {{ cancellingBookingId === booking.id ? 'Cancellazione...' : 'Cancella' }}
+                  </button>
+                  <span v-else-if="booking.status !== 'cancellata'" class="muted small">
+                    Non cancellabile
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DISPONIBILITA -->
+          <div class="panel grid-span">
+            <div class="panel__header">
+              <div>
+                <h2>Disponibilita in tempo reale</h2>
+                <p>Seleziona data e orario per vedere subito i tavoli liberi.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" v-model="onlyAvailable" />
+                <span>Mostra solo disponibili</span>
+              </label>
+            </div>
+            <div class="filters">
+              <label>
+                Data
+                <input type="date" v-model="selectedDate" />
+              </label>
+              <label>
+                Orario inizio
+                <select v-model="timeStart">
+                  <optgroup label="Pranzo">
+                    <option v-for="slot in lunchSlots" :key="'l-' + slot" :value="slot">
+                      {{ slot }}
+                    </option>
+                  </optgroup>
+                  <optgroup label="Cena">
+                    <option v-for="slot in dinnerSlots" :key="'d-' + slot" :value="slot">
+                      {{ slot }}
+                    </option>
+                  </optgroup>
+                </select>
+              </label>
+              <label>
+                Ospiti
+                <input
+                  type="number"
+                  :min="minGuestCount"
+                  :max="maxGuestCount"
+                  v-model.number="guestCount"
+                />
+              </label>
+            </div>
+            <div class="availability">
+              <div class="summary availability-summary">
+                <div class="summary-card available">
+                  <span class="summary-title">Disponibili</span>
+                  <span class="metric">{{ availableCount }}</span>
+                  <span class="summary-detail">Tavoli liberi ora</span>
+                </div>
+                <div class="summary-card total">
+                  <span class="summary-title">Totali</span>
+                  <span class="metric">{{ totalTables }}</span>
+                  <span class="summary-detail">Tavoli in sala</span>
+                </div>
+                <div class="summary-card blocked">
+                  <span class="summary-title">Non disponibili</span>
+                  <span class="metric">{{ busyCount }}</span>
+                </div>
+              </div>
+              <div class="table-grid">
+                <button
+                  v-for="(table, index) in visibleTables"
+                  :key="table.id"
+                  class="table-card"
+                  :class="tableCardClass(table)"
+                  :style="{ animationDelay: (index * 0.03) + 's' }"
+                  @click="selectTable(table)"
+                  :disabled="!availabilityMap[table.id].selectable"
+                >
+                  <div class="table-card__title">
+                    Tavolo {{ table.table_number }}
+                  </div>
+                  <div class="table-card__meta">
+                    Capienza {{ table.capacity_max }}
+                  </div>
+                  <div class="table-card__status">
+                    <span class="badge" :class="availabilityMap[table.id].badge">
+                      {{ availabilityMap[table.id].label }}
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- FORM PRENOTAZIONE -->
+          <div class="panel booking">
+            <div class="panel__header">
+              <div>
+                <h2>Completa la prenotazione</h2>
+                <p>Seleziona tavolo, orario e numero di ospiti.</p>
+              </div>
+            </div>
+            <div class="booking__body">
+              <label>
+                Tavolo selezionato
+                <input type="text" :value="selectedTableLabel" readonly />
+              </label>
+              <div class="inline">
+                <label>
+                  Data
+                  <input type="date" v-model="selectedDate" />
+                </label>
+                <label>
+                  Orario arrivo
+                  <input type="text" :value="timeStart" readonly />
+                </label>
+              </div>
+              <label>
+                Ospiti
+                <input
+                  type="number"
+                  :min="minGuestCount"
+                  :max="maxGuestCount"
+                  v-model.number="guestCount"
+                />
+              </label>
+              <div class="actions">
+                <button class="primary" @click="createBookingAsCustomer" :disabled="bookingLoading">
+                  {{ bookingLoading ? 'Invio in corso...' : 'Conferma prenotazione' }}
+                </button>
+                <button class="ghost" @click="resetBookingForm">Svuota selezione</button>
+              </div>
+              <div class="message" v-if="bookingMessage">
+                {{ bookingMessage }}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VISTA STAFF -->
+        <section v-if="activeView === 'staff'" class="staff-view">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2>Prenotazioni del giorno</h2>
+                <p>Vista gestionale con tutte le prenotazioni filtrate per data.</p>
+              </div>
+              <div class="staff-controls">
+                <label>
+                  Data
+                  <input type="date" v-model="staffDate" />
+                </label>
+                <label>
+                  Stato
+                  <select v-model="staffStatusFilter">
+                    <option value="">Tutti</option>
+                    <option value="confermata">Confermata</option>
+                    <option value="in attesa">In attesa</option>
+                    <option value="completata">Completata</option>
+                    <option value="cancellata">Cancellata</option>
+                  </select>
+                </label>
+                <label class="toggle">
+                  <input type="checkbox" v-model="autoRefresh" />
+                  <span>Aggiornamento automatico</span>
+                </label>
+              </div>
+            </div>
+            <div class="summary staff-summary">
+              <div>
+                <span class="metric">{{ staffBookingsFiltered.length }}</span>
+                <span>Prenotazioni</span>
+              </div>
+              <div>
+                <span class="metric">{{ staffStats.pending }}</span>
+                <span>In attesa</span>
+              </div>
+              <div>
+                <span class="metric">{{ staffStats.confirmed }}</span>
+                <span>Confermate</span>
+              </div>
+            </div>
+            <div class="message" v-if="staffMessage">
+              {{ staffMessage }}
+            </div>
+            <div class="table">
+              <div class="table__header">
+                <span>Orario</span>
+                <span>Tavolo</span>
+                <span>Cliente</span>
+                <span>Telefono</span>
+                <span>Ospiti</span>
+                <span>Stato</span>
+                <span>Azioni</span>
+              </div>
+              <div v-if="staffBookingsFiltered.length === 0" class="empty">
+                Nessuna prenotazione per questa data.
+              </div>
+              <div
+                v-for="booking in staffBookingsFiltered"
+                :key="booking.id"
+                class="table__row"
+              >
+                <span>{{ booking.time_start }}</span>
+                <span>Tavolo {{ booking.table_number }}</span>
+                <span>{{ booking.customer_name }}</span>
+                <span>
+                  <a v-if="booking.customer_phone" class="contact-link" :href="`tel:${booking.customer_phone}`">
+                    {{ booking.customer_phone }}
+                  </a>
+                  <span v-else class="muted">-</span>
+                </span>
+                <span>{{ booking.guest_count }}</span>
+                <span class="badge" :class="statusBadge(booking.status)">{{ booking.status }}</span>
+                <div class="row-actions">
+                <template v-if="booking.status === 'in attesa'">
+                  <button class="chip confirm" :disabled="isBookingActionLoading(booking.id)" @click="updateBookingStatus(booking, 'confermata')">
+                    Conferma
+                  </button>
+                  <button class="chip cancel" :disabled="isBookingActionLoading(booking.id)" @click="cancelBooking(booking)">
+                    Annulla
+                  </button>
+                </template>
+                <template v-else-if="booking.status === 'confermata'">
+                  <button class="chip complete" :disabled="isBookingActionLoading(booking.id)" @click="updateBookingStatus(booking, 'completata')">
+                    Completa
+                  </button>
+                  <button class="chip cancel" :disabled="isBookingActionLoading(booking.id)" @click="cancelBooking(booking)">
+                    Annulla
+                  </button>
+                </template>
+                <template v-else-if="booking.status === 'completata'">
+                  <button class="chip pending" :disabled="isBookingActionLoading(booking.id)" @click="updateBookingStatus(booking, 'in attesa')">
+                    In attesa
+                  </button>
+                  <button class="chip cancel" :disabled="isBookingActionLoading(booking.id)" @click="cancelBooking(booking)">
+                    Annulla
+                  </button>
+                </template>
+                <span v-else class="muted">-</span>
+              </div>
+            </div>
+          </div>
+          </div>
+        </section>
+      </section>
+    </div>
+
+    <script>
+      window.__API_BASE__ = 'http://127.0.0.1:8000';
+      window.__BOOKING_DEFAULT_DURATION__ = 90;
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
